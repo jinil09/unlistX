@@ -121,7 +121,7 @@ export default function SecondarySellerRegistration() {
   useEffect(() => {
     if (hasUnsavedChanges) {
       const dataToSave = { ...formData, currentStep }
-      localStorage.setItem("secondarySellerDraft", JSON.JSON.stringify(dataToSave))
+      localStorage.setItem("secondarySellerDraft", JSON.stringify(dataToSave))
     }
   }, [formData, currentStep, hasUnsavedChanges])
 
@@ -417,7 +417,7 @@ export default function SecondarySellerRegistration() {
 
   const handleSaveProgress = () => {
     const dataToSave = { ...formData, currentStep }
-    localStorage.setItem("secondarySellerDraft", JSON.JSON.stringify(dataToSave))
+    localStorage.setItem("secondarySellerDraft", JSON.stringify(dataToSave))
     setHasUnsavedChanges(false)
     alert("Progress saved successfully!")
   }
