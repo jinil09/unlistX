@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Progress } from "@/components/ui/progress"
+import { useToast } from "@/hooks/use-toast"
 import {
   AlertCircle,
   CheckCircle2,
@@ -39,6 +40,7 @@ interface CompanyHolding {
 
 export default function SecondarySellerRegistration() {
   const router = useRouter()
+  const { toast } = useToast()
   const [currentStep, setCurrentStep] = useState(1)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -422,18 +424,98 @@ export default function SecondarySellerRegistration() {
     alert("Progress saved successfully!")
   }
 
-  const handleSubmit = () => {
-    if (validateStep(4)) {
-      setShowConfirmDialog(true)
+  const handleSubmit = async () => {
+    if (!validateStep(4)) {
+      toast({
+        title: "Validation Error",
+        description: "Please fix all errors before submitting.",
+        variant: "destructive",
+      });
+      return;
     }
-  }
+    
+    try {
+      // Create FormData object
+      const submitData = new FormData();
+      
+      // Append personal information
+      submitData.append('fullName', formData.fullName);
+      submitData.append('email', formData.email);
+      submitData.append('phone', formData.phone);
+      submitData.append('password', formData.password);
+      submitData.append('panNumber', formData.panNumber);
+      submitData.append('aadharNumber', formData.aadharNumber);
+      
+      // Append bank information
+      submitData.append('bankName', formData.bankName);
+      submitData.append('accountNumber', formData.accountNumber);
+      submitData.append('ifscCode', formData.ifscCode);
+      submitData.append('accountHolderName', formData.accountHolderName);
+      
+      // Append additional information
+      submitData.append('reasonForSelling', formData.reasonForSelling);
+      submitData.append('urgency', formData.urgency);
+      submitData.append('additionalNotes', formData.additionalNotes);
+      submitData.append('agreeToTerms', formData.agreeToTerms.toString());
+      
+      // Append documents
+      if (formData.panCard) {
+        submitData.append('panCard', formData.panCard);
+      }
+      if (formData.aadharCard) {
+        submitData.append('aadharCard', formData.aadharCard);
+      }
+      
+      // Append company holdings
+      formData.companyHoldings.forEach((holding, index) => {
+        submitData.append(`companyHoldings[${index}][id]`, holding.id);
+        submitData.append(`companyHoldings[${index}][companyName]`, holding.companyName);
+        submitData.append(`companyHoldings[${index}][shareQuantity]`, holding.shareQuantity);
+        submitData.append(`companyHoldings[${index}][certificateNumber]`, holding.certificateNumber);
+        submitData.append(`companyHoldings[${index}][acquisitionDate]`, holding.acquisitionDate);
+        submitData.append(`companyHoldings[${index}][acquisitionPrice]`, holding.acquisitionPrice);
+        submitData.append(`companyHoldings[${index}][expectedPrice]`, holding.expectedPrice);
+        if (holding.proofDocument) {
+          submitData.append(`companyHoldings[${index}][proofDocument]`, holding.proofDocument);
+        }
+      });
+
+      // Submit to API
+      const response = await fetch('/api/secondary-seller-registration', {
+        method: 'POST',
+        body: submitData,
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setShowConfirmDialog(false);
+        localStorage.removeItem("secondarySellerDraft");
+        setHasUnsavedChanges(false);
+        
+        toast({
+          title: "Registration Successful!",
+          description: "Your seller account has been created and is pending approval.",
+        });
+        
+        router.push("/seller/pending");
+      } else {
+        throw new Error(result.error || result.details);
+      }
+
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      toast({
+        title: "Registration Failed",
+        description: error.message || "There was an error submitting your registration. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const confirmSubmit = () => {
-    console.log("Secondary Seller Registration:", formData)
-    localStorage.removeItem("secondarySellerDraft")
-    setHasUnsavedChanges(false)
-    router.push("/seller/pending")
-  }
+    handleSubmit();
+  };
 
   const getPasswordStrength = (password: string) => {
     if (!password) return { strength: 0, label: "", color: "" }

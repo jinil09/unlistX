@@ -233,40 +233,103 @@ export default function SignUpPage() {
     })
   }
 
-  const handleInvestorSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleInvestorSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-    const newErrors: Record<string, string> = {}
-    if (!investorForm.fullName) newErrors.fullName = "Full name is required"
-    if (!investorForm.email) newErrors.email = "Email is required"
-    else if (validateEmail(investorForm.email)) newErrors.email = validateEmail(investorForm.email)
-    if (!investorForm.phone) newErrors.phone = "Phone is required"
-    else if (validatePhone(investorForm.phone)) newErrors.phone = validatePhone(investorForm.phone)
-    if (!investorForm.password) newErrors.password = "Password is required"
+    const newErrors: Record<string, string> = {};
+    if (!investorForm.fullName) newErrors.fullName = "Full name is required";
+    if (!investorForm.email) newErrors.email = "Email is required";
+    else if (validateEmail(investorForm.email)) newErrors.email = validateEmail(investorForm.email);
+    if (!investorForm.phone) newErrors.phone = "Phone is required";
+    else if (validatePhone(investorForm.phone)) newErrors.phone = validatePhone(investorForm.phone);
+    if (!investorForm.password) newErrors.password = "Password is required";
     if (validatePasswordMatch(investorForm.password, investorForm.confirmPassword)) {
-      newErrors.confirmPassword = validatePasswordMatch(investorForm.password, investorForm.confirmPassword)
+      newErrors.confirmPassword = validatePasswordMatch(investorForm.password, investorForm.confirmPassword);
     }
-    if (!investorForm.termsAccepted) newErrors.terms = "You must accept the terms and conditions"
-    if (!investorForm.privacyAccepted) newErrors.privacy = "You must accept the privacy policy"
+    if (!investorForm.termsAccepted) newErrors.terms = "You must accept the terms and conditions";
+    if (!investorForm.privacyAccepted) newErrors.privacy = "You must accept the privacy policy";
 
     if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors)
+      setErrors(newErrors);
       toast({
         title: "Validation Error",
         description: "Please fix the errors before submitting.",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    console.log("Investor signup:", investorForm)
-    localStorage.removeItem("unlistx-investor-form")
-    setHasUnsavedChanges(false)
-    toast({
-      title: "Registration Successful!",
-      description: "Your investor account has been created. Check your email for verification.",
-    })
-  }
+    try {
+      // Submit to API
+      const response = await fetch('/api/investor-registration', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(investorForm),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Clear local storage on successful submission
+        localStorage.removeItem("unlistx-investor-form");
+        setHasUnsavedChanges(false);
+        
+        toast({
+          title: "Registration Successful!",
+          description: "Your investor account has been created. Check your email for verification.",
+        });
+
+        // After successful investor registration, create user account
+        const createUserAccount = async (email: string, password: string, investorId: number) => {
+          try {
+            const response = await fetch('/api/auth/register', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                email,
+                password,
+                userType: 'investor',
+                referenceId: investorId
+              })
+            });
+
+            const result = await response.json();
+            return result.success;
+          } catch (error) {
+            console.error('Error creating user account:', error);
+            return false;
+          }
+        };
+
+        // In your submit handler, after successful investor registration:
+        const userAccountCreated = await createUserAccount(
+          investorForm.email,
+          investorForm.password,
+          result.investorId
+        );
+
+        const params = new URLSearchParams({
+          email: investorForm.email,
+          userType: 'investor'
+        });
+        
+        window.location.href = `/registration-success?${params.toString()}`;
+
+      } else {
+        throw new Error(result.error || result.details);
+      }
+
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      toast({
+        title: "Registration Failed",
+        description: error.message || "There was an error creating your account. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleCompanySubmit = (e: React.FormEvent) => {
     e.preventDefault()

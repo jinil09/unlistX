@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Navigation } from "@/components/navigation"
 import { Card } from "@/components/ui/card"
@@ -22,97 +22,103 @@ import {
   Calendar,
   TrendingUp,
   LogOut,
+  RefreshCw,
 } from "lucide-react"
 
-// Mock data for pending investor registrations
-const mockInvestors = [
-  {
-    id: "INV001",
-    name: "Rajesh Kumar",
-    email: "rajesh.kumar@email.com",
-    phone: "+91 98765 43210",
-    location: "Mumbai, Maharashtra",
-    investorType: "Individual",
-    netWorth: "₹5-10 Crores",
-    investmentRange: "₹50 Lakhs - ₹2 Crores",
-    experience: "5+ years",
-    sectors: ["Technology", "Healthcare", "FinTech"],
-    stages: ["Series A", "Series B"],
-    submittedDate: "2024-01-15",
-    status: "pending",
-  },
-  {
-    id: "INV002",
-    name: "Priya Sharma",
-    email: "priya.sharma@email.com",
-    phone: "+91 98765 43211",
-    location: "Bangalore, Karnataka",
-    investorType: "Angel Investor",
-    netWorth: "₹10+ Crores",
-    investmentRange: "₹1-5 Crores",
-    experience: "10+ years",
-    sectors: ["SaaS", "E-commerce", "EdTech"],
-    stages: ["Seed", "Series A"],
-    submittedDate: "2024-01-16",
-    status: "pending",
-  },
-]
+interface Investor {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  location: string;
+  investorType: string;
+  netWorth: string;
+  investmentRange: string;
+  experience: string;
+  sectors: string[];
+  stages: string[];
+  submittedDate: string;
+  status: string;
+}
 
-// Mock data for pending company registrations
-const mockCompanies = [
-  {
-    id: "COM001",
-    companyName: "TechVenture Solutions Pvt Ltd",
-    email: "contact@techventure.com",
-    phone: "+91 98765 43212",
-    location: "Pune, Maharashtra",
-    industry: "Technology",
-    yearIncorporated: "2020",
-    website: "www.techventure.com",
-    lastYearSales: "₹2.5 Crores",
-    currentYearProjection: "₹5 Crores",
-    sharesOffered: "100,000",
-    pricePerShare: "₹500",
-    totalAmount: "₹5 Crores",
-    purpose: "Product development and market expansion",
-    listingType: "premium" as "normal" | "premium",
-    feeWaived: false,
-    submittedDate: "2024-01-14",
-    status: "pending",
-  },
-  {
-    id: "COM002",
-    companyName: "HealthCare Innovations Ltd",
-    email: "info@healthcareinnovations.com",
-    phone: "+91 98765 43213",
-    location: "Delhi, NCR",
-    industry: "Healthcare",
-    yearIncorporated: "2019",
-    website: "www.healthcareinnovations.com",
-    lastYearSales: "₹8 Crores",
-    currentYearProjection: "₹15 Crores",
-    sharesOffered: "200,000",
-    pricePerShare: "₹750",
-    totalAmount: "₹15 Crores",
-    purpose: "Expansion to new cities and R&D",
-    listingType: "normal" as "normal" | "premium",
-    feeWaived: false,
-    submittedDate: "2024-01-15",
-    status: "pending",
-  },
-]
+interface Company {
+  id: string;
+  companyName: string;
+  email: string;
+  phone: string;
+  location: string;
+  industry: string;
+  yearIncorporated: string;
+  website: string;
+  lastYearSales: string;
+  currentYearProjection: string;
+  sharesOffered: string;
+  pricePerShare: string;
+  totalAmount: string;
+  purpose: string;
+  listingType: "normal" | "premium";
+  feeWaived: boolean;
+  submittedDate: string;
+  status: string;
+}
+
+interface Seller {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  bankName: string;
+  accountNumber: string;
+  reason: string;
+  urgency: string;
+  totalHoldings: number;
+  totalValue: string;
+  submittedDate: string;
+  status: string;
+}
 
 export default function AdminDashboard() {
   const router = useRouter()
-  const [investors, setInvestors] = useState(mockInvestors)
-  const [companies, setCompanies] = useState(mockCompanies)
+  const [investors, setInvestors] = useState<Investor[]>([])
+  const [companies, setCompanies] = useState<Company[]>([])
+  const [sellers, setSellers] = useState<Seller[]>([])
   const [selectedInvestor, setSelectedInvestor] = useState<string | null>(null)
   const [selectedCompany, setSelectedCompany] = useState<string | null>(null)
-  const [editingCompany, setEditingCompany] = useState<{
-    id: string
-    listingType: "normal" | "premium"
-    feeWaived: boolean
-  } | null>(null)
+  const [selectedSeller, setSelectedSeller] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+
+  // Fetch all data
+  const fetchData = async () => {
+    try {
+      setRefreshing(true)
+      
+      const [investorsRes, companiesRes, sellersRes] = await Promise.all([
+        fetch('/api/admin/investors?status=pending'),
+        fetch('/api/admin/companies?status=pending'),
+        fetch('/api/admin/sellers?status=pending')
+      ])
+
+      const investorsData = await investorsRes.json()
+      const companiesData = await companiesRes.json()
+      console.log('companiesData Response:', companiesData)
+      const sellersData = await sellersRes.json()
+
+      if (investorsData.success) setInvestors(investorsData.data)
+      if (companiesData.success) setCompanies(companiesData.data)
+      if (sellersData.success) setSellers(sellersData.data)
+
+    } catch (error) {
+      console.error('Error fetching data:', error)
+    } finally {
+      setLoading(false)
+      setRefreshing(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchData()
+  }, [])
 
   const handleLogout = async () => {
     try {
@@ -123,37 +129,109 @@ export default function AdminDashboard() {
     }
   }
 
-  const handleInvestorAction = (id: string, action: "approve" | "reject") => {
-    setInvestors(investors.filter((inv) => inv.id !== id))
-    setSelectedInvestor(null)
-    // In real app, this would call an API
-    console.log(`[v0] Investor ${id} ${action}ed`)
+  const handleInvestorAction = async (id: string, action: "approve" | "reject") => {
+    try {
+      const response = await fetch('/api/admin/investors', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          id, 
+          status: action === 'approve' ? 'approved' : 'rejected',
+          adminNotes: `${action === 'approve' ? 'Approved' : 'Rejected'} by admin`
+        })
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        setInvestors(investors.filter((inv) => inv.id !== id))
+        setSelectedInvestor(null)
+      } else {
+        console.error('Failed to update investor:', result.error)
+      }
+    } catch (error) {
+      console.error('Error updating investor:', error)
+    }
   }
 
-  const handleCompanyAction = (id: string, action: "approve" | "reject") => {
-    setCompanies(companies.filter((comp) => comp.id !== id))
-    setSelectedCompany(null)
-    setEditingCompany(null)
-    // In real app, this would call an API
-    console.log(`[v0] Company ${id} ${action}ed`)
+  const handleCompanyAction = async (id: string, action: "approve" | "reject") => {
+    try {
+      const company = companies.find(comp => comp.id === id)
+      const response = await fetch('/api/admin/companies', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          id, 
+          status: action === 'approve' ? 'approved' : 'rejected',
+          listingType: company?.listingType || 'normal',
+          adminNotes: `${action === 'approve' ? 'Approved' : 'Rejected'} by admin`
+        })
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        setCompanies(companies.filter((comp) => comp.id !== id))
+        setSelectedCompany(null)
+      } else {
+        console.error('Failed to update company:', result.error)
+      }
+    } catch (error) {
+      console.error('Error updating company:', error)
+    }
+  }
+
+  const handleSellerAction = async (id: string, action: "approve" | "reject") => {
+    try {
+      const response = await fetch('/api/admin/sellers', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          id, 
+          status: action === 'approve' ? 'approved' : 'rejected',
+          adminNotes: `${action === 'approve' ? 'Approved' : 'Rejected'} by admin`
+        })
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        setSellers(sellers.filter((seller) => seller.id !== id))
+        setSelectedSeller(null)
+      } else {
+        console.error('Failed to update seller:', result.error)
+      }
+    } catch (error) {
+      console.error('Error updating seller:', error)
+    }
   }
 
   const handleListingTypeChange = (id: string, listingType: "normal" | "premium") => {
-    setCompanies(companies.map((comp) => (comp.id === id ? { ...comp, listingType } : comp)))
-    if (editingCompany?.id === id) {
-      setEditingCompany({ ...editingCompany, listingType })
-    }
+    setCompanies(companies.map((comp) => 
+      comp.id === id ? { ...comp, listingType } : comp
+    ))
   }
 
   const handleFeeWaiverToggle = (id: string) => {
-    setCompanies(companies.map((comp) => (comp.id === id ? { ...comp, feeWaived: !comp.feeWaived } : comp)))
-    if (editingCompany?.id === id) {
-      setEditingCompany({ ...editingCompany, feeWaived: !editingCompany.feeWaived })
-    }
+    setCompanies(companies.map((comp) => 
+      comp.id === id ? { ...comp, feeWaived: !comp.feeWaived } : comp
+    ))
   }
 
   const selectedInvestorData = investors.find((inv) => inv.id === selectedInvestor)
   const selectedCompanyData = companies.find((comp) => comp.id === selectedCompany)
+  const selectedSellerData = sellers.find((seller) => seller.id === selectedSeller)
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <RefreshCw className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
+          <p className="text-slate-600">Loading dashboard...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50">
@@ -168,14 +246,25 @@ export default function AdminDashboard() {
             </h1>
             <p className="text-slate-600">Review and manage pending registrations</p>
           </div>
-          <Button onClick={handleLogout} variant="outline" className="border-2 bg-transparent">
-            <LogOut className="w-4 h-4 mr-2" />
-            Logout
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button 
+              onClick={fetchData} 
+              variant="outline" 
+              disabled={refreshing}
+              className="border-2 bg-transparent"
+            >
+              <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+            <Button onClick={handleLogout} variant="outline" className="border-2 bg-transparent">
+              <LogOut className="w-4 h-4 mr-2" />
+              Logout
+            </Button>
+          </div>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <Card className="p-6 border-2">
             <div className="flex items-center justify-between">
               <div>
@@ -203,8 +292,20 @@ export default function AdminDashboard() {
           <Card className="p-6 border-2">
             <div className="flex items-center justify-between">
               <div>
+                <p className="text-sm text-slate-600 mb-1">Pending Sellers</p>
+                <p className="text-3xl font-bold text-slate-900">{sellers.length}</p>
+              </div>
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center">
+                <DollarSign className="w-6 h-6 text-white" />
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-6 border-2">
+            <div className="flex items-center justify-between">
+              <div>
                 <p className="text-sm text-slate-600 mb-1">Total Pending</p>
-                <p className="text-3xl font-bold text-slate-900">{investors.length + companies.length}</p>
+                <p className="text-3xl font-bold text-slate-900">{investors.length + companies.length + sellers.length}</p>
               </div>
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
                 <Clock className="w-6 h-6 text-white" />
@@ -215,18 +316,24 @@ export default function AdminDashboard() {
 
         {/* Tabs */}
         <Tabs defaultValue="investors" className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-2 border-2">
+          <TabsList className="grid w-full max-w-md grid-cols-3 border-2">
             <TabsTrigger
               value="investors"
               className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white"
             >
-              Investor Registrations
+              Investors ({investors.length})
             </TabsTrigger>
             <TabsTrigger
               value="companies"
               className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-600 data-[state=active]:to-teal-600 data-[state=active]:text-white"
             >
-              Company Registrations
+              Companies ({companies.length})
+            </TabsTrigger>
+            <TabsTrigger
+              value="sellers"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-pink-600 data-[state=active]:text-white"
+            >
+              Sellers ({sellers.length})
             </TabsTrigger>
           </TabsList>
 
@@ -235,7 +342,7 @@ export default function AdminDashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* List */}
               <div className="space-y-4">
-                <h2 className="text-xl font-semibold text-slate-900">Pending Investors ({investors.length})</h2>
+                <h2 className="text-xl font-semibold text-slate-900">Pending Investors</h2>
                 {investors.length === 0 ? (
                   <Card className="p-8 text-center border-2">
                     <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto mb-3" />
@@ -403,7 +510,7 @@ export default function AdminDashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* List */}
               <div className="space-y-4">
-                <h2 className="text-xl font-semibold text-slate-900">Pending Companies ({companies.length})</h2>
+                <h2 className="text-xl font-semibold text-slate-900">Pending Companies</h2>
                 {companies.length === 0 ? (
                   <Card className="p-8 text-center border-2">
                     <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto mb-3" />
@@ -657,6 +764,158 @@ export default function AdminDashboard() {
                   <Card className="p-12 text-center border-2 border-dashed">
                     <Building2 className="w-16 h-16 text-slate-300 mx-auto mb-4" />
                     <p className="text-slate-500">Select a company to view details</p>
+                  </Card>
+                )}
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* Sellers Tab */}
+          <TabsContent value="sellers">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* List */}
+              <div className="space-y-4">
+                <h2 className="text-xl font-semibold text-slate-900">Pending Sellers</h2>
+                {sellers.length === 0 ? (
+                  <Card className="p-8 text-center border-2">
+                    <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto mb-3" />
+                    <p className="text-slate-600">No pending seller registrations</p>
+                  </Card>
+                ) : (
+                  sellers.map((seller) => (
+                    <Card
+                      key={seller.id}
+                      className={`p-6 border-2 cursor-pointer transition-all hover:shadow-lg ${
+                        selectedSeller === seller.id ? "ring-2 ring-purple-500 border-purple-500" : ""
+                      }`}
+                      onClick={() => setSelectedSeller(seller.id)}
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <h3 className="font-semibold text-lg text-slate-900">{seller.name}</h3>
+                          <p className="text-sm text-slate-600">{seller.totalHoldings} holdings</p>
+                        </div>
+                        <Badge className="bg-amber-100 text-amber-700 border-amber-300 border-2">
+                          <Clock className="w-3 h-3 mr-1" />
+                          Pending
+                        </Badge>
+                      </div>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex items-center gap-2 text-slate-600">
+                          <Mail className="w-4 h-4" />
+                          {seller.email}
+                        </div>
+                        <div className="flex items-center gap-2 text-slate-600">
+                          <DollarSign className="w-4 h-4" />
+                          Total Value: {seller.totalValue}
+                        </div>
+                        <div className="flex items-center gap-2 text-slate-600">
+                          <Calendar className="w-4 h-4" />
+                          Submitted: {seller.submittedDate}
+                        </div>
+                      </div>
+                    </Card>
+                  ))
+                )}
+              </div>
+
+              {/* Details */}
+              <div>
+                {selectedSellerData ? (
+                  <Card className="p-6 border-2 sticky top-4">
+                    <h2 className="text-xl font-semibold text-slate-900 mb-6">Seller Details</h2>
+
+                    <div className="space-y-6">
+                      {/* Personal Info */}
+                      <div>
+                        <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                          <User className="w-5 h-5 text-purple-600" />
+                          Personal Information
+                        </h3>
+                        <div className="space-y-2 text-sm bg-slate-50 p-4 rounded-lg border-2 border-slate-200">
+                          <div className="flex justify-between">
+                            <span className="text-slate-600">Name:</span>
+                            <span className="font-medium text-slate-900">{selectedSellerData.name}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-600">Email:</span>
+                            <span className="font-medium text-slate-900">{selectedSellerData.email}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-600">Phone:</span>
+                            <span className="font-medium text-slate-900">{selectedSellerData.phone}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Bank Information */}
+                      <div>
+                        <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                          <Building2 className="w-5 h-5 text-purple-600" />
+                          Bank Information
+                        </h3>
+                        <div className="space-y-2 text-sm bg-slate-50 p-4 rounded-lg border-2 border-slate-200">
+                          <div className="flex justify-between">
+                            <span className="text-slate-600">Bank Name:</span>
+                            <span className="font-medium text-slate-900">{selectedSellerData.bankName}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-600">Account Number:</span>
+                            <span className="font-medium text-slate-900">{selectedSellerData.accountNumber}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Selling Details */}
+                      <div>
+                        <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                          <DollarSign className="w-5 h-5 text-purple-600" />
+                          Selling Details
+                        </h3>
+                        <div className="space-y-2 text-sm bg-slate-50 p-4 rounded-lg border-2 border-slate-200">
+                          <div className="flex justify-between">
+                            <span className="text-slate-600">Reason for Selling:</span>
+                            <span className="font-medium text-slate-900">{selectedSellerData.reason}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-600">Urgency:</span>
+                            <span className="font-medium text-slate-900">{selectedSellerData.urgency}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-600">Total Holdings:</span>
+                            <span className="font-medium text-slate-900">{selectedSellerData.totalHoldings}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-600">Total Value:</span>
+                            <span className="font-medium text-slate-900 text-lg">{selectedSellerData.totalValue}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex gap-3 pt-4">
+                        <Button
+                          onClick={() => handleSellerAction(selectedSellerData.id, "approve")}
+                          className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
+                        >
+                          <CheckCircle2 className="w-4 h-4 mr-2" />
+                          Approve
+                        </Button>
+                        <Button
+                          onClick={() => handleSellerAction(selectedSellerData.id, "reject")}
+                          variant="destructive"
+                          className="flex-1"
+                        >
+                          <XCircle className="w-4 h-4 mr-2" />
+                          Reject
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                ) : (
+                  <Card className="p-12 text-center border-2 border-dashed">
+                    <DollarSign className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                    <p className="text-slate-500">Select a seller to view details</p>
                   </Card>
                 )}
               </div>

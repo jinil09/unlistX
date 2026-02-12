@@ -1,31 +1,47 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { cookies } from "next/headers"
+import { NextResponse } from "next/server";
+import getPool from "@/lib/db";
+import { RowDataPacket } from "mysql2";
 
-// Admin credentials - In production, these should be in environment variables
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@unlistx.com"
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123"
+export const runtime = "nodejs";
 
-export async function POST(request: NextRequest) {
+export async function POST(req: Request) {
   try {
-    const { email, password } = await request.json()
+    const { email, password } = await req.json();
 
-    // Validate credentials
-    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-      // Set authentication cookie
-      const cookieStore = await cookies()
-      cookieStore.set("admin_session", "authenticated", {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 60 * 60 * 24, // 24 hours
-        path: "/",
-      })
-
-      return NextResponse.json({ success: true })
-    } else {
-      return NextResponse.json({ error: "Invalid email or password" }, { status: 401 })
+    if (!email || !password) {
+      return NextResponse.json({ error: "Email and password required" }, { status: 400 });
     }
-  } catch (error) {
-    return NextResponse.json({ error: "An error occurred" }, { status: 500 })
+
+    const pool = getPool();
+
+    const [rows] = await pool.query<RowDataPacket[]>(
+      "SELECT id, email, password FROM admin_users WHERE email = ? LIMIT 1",
+      [email]
+    );
+
+    if (rows.length === 0) {
+      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+    }
+
+    const user = rows[0] as { id: number; email: string; password: string };
+
+    if (user.password !== password) {
+      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+    }
+
+    // ✅ Create response with cookie
+    const res = NextResponse.json({ success: true });
+
+    res.cookies.set("admin_session", "authenticated", {
+      httpOnly: true, // keeps it safe from JS access
+      secure: process.env.NODE_ENV === "production", // only HTTPS in prod
+      path: "/", // cookie applies to all routes
+      maxAge: 60 * 60 * 24, // 1 day
+    });
+
+    return res;
+  } catch (err) {
+    console.error("Login error:", err);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

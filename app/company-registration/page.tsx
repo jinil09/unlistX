@@ -240,29 +240,83 @@ export default function CompanyRegistration() {
     })
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
     if (!validateStep(6)) {
       toast({
         title: "Validation Error",
         description: "Please complete all required fields.",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
-    setShowSubmitDialog(true)
-  }
 
+    try {
+      // Create FormData object
+      const submitData = new FormData();
+      
+      // Append all form data with proper typing
+      Object.keys(formData).forEach((key) => {
+        const formKey = key as keyof typeof formData;
+        const value = formData[formKey];
+        
+        if (formKey === 'logo' && value instanceof File) {
+          submitData.append(formKey, value);
+        } else if (typeof value === 'boolean') {
+          submitData.append(formKey, value.toString());
+        } else if (value !== null && value !== undefined) {
+          submitData.append(formKey, value.toString());
+        }
+      });
+
+      // Append uploaded files
+      Object.keys(uploadedFiles).forEach((key) => {
+        submitData.append(key, uploadedFiles[key]);
+      });
+
+      // Submit to API
+      const response = await fetch('/api/company-registration', {
+        method: 'POST',
+        body: submitData,
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Clear local storage on successful submission
+        localStorage.removeItem("unlistx-company-registration");
+        localStorage.removeItem("unlistx-company-registration-step");
+        
+        toast({
+          title: "Registration submitted successfully!",
+          description: "Your application has been submitted for admin approval.",
+        });
+        
+        setShowSubmitDialog(false);
+      } else {
+        throw new Error(result.error);
+      }
+
+    } catch (error) {
+      console.error('Submission error:', error);
+      toast({
+        title: "Submission failed",
+        description: "There was an error submitting your application. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Update confirmSubmit to properly handle the event
   const confirmSubmit = () => {
-    console.log("Company registration:", formData)
-    localStorage.removeItem("unlistx-company-registration")
-    localStorage.removeItem("unlistx-company-registration-step")
-    toast({
-      title: "Registration submitted",
-      description: "Your application has been submitted for admin approval.",
-    })
-    setShowSubmitDialog(false)
-  }
+    // Create a proper form event
+    const syntheticEvent = {
+      preventDefault: () => {},
+    } as React.FormEvent<HTMLFormElement>;
+    
+    handleSubmit(syntheticEvent);
+  };
 
   const getOverallProgress = () => {
     return Math.round((step / 6) * 100)

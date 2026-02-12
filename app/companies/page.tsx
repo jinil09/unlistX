@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Navigation } from "@/components/navigation"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -19,234 +19,158 @@ import {
   Users,
   Target,
   Award,
+  RefreshCw,
 } from "lucide-react"
 import Link from "next/link"
 
-const showcaseCompanies = [
-  {
-    id: "1",
-    name: "TechVenture Solutions Pvt Ltd",
-    logo: "/tech-company-logo.jpg",
-    industry: "Technology",
-    location: "Pune, Maharashtra",
-    yearIncorporated: "2020",
-    website: "www.techventure.com",
-    description:
-      "Leading SaaS platform for enterprise resource planning with AI-powered analytics and automation capabilities serving Fortune 500 companies.",
-    lastYearSales: "₹2.5 Crores",
-    currentYearProjection: "₹5 Crores",
-    sharesOffered: "100,000",
-    pricePerShare: "₹500",
-    totalAmount: "₹5 Crores",
-    minInvestment: "₹50 Lakhs",
-    stage: "Series A",
-    purpose: "Product development and market expansion",
-    highlights: ["40% YoY Growth", "200+ Enterprise Clients", "Profitable", "AI-Powered"],
-    employees: "150+",
-    customers: "200+",
-    featured: true,
-    approved: true,
-    listingType: "premium",
-  },
-  {
-    id: "2",
-    name: "HealthCare Innovations Ltd",
-    logo: "/healthcare-medical-logo.jpg",
-    industry: "Healthcare",
-    location: "Delhi, NCR",
-    yearIncorporated: "2019",
-    website: "www.healthcareinnovations.com",
-    description:
-      "Revolutionary telemedicine platform connecting patients with specialists across India, powered by AI diagnostics and 24/7 availability.",
-    lastYearSales: "₹8 Crores",
-    currentYearProjection: "₹15 Crores",
-    sharesOffered: "200,000",
-    pricePerShare: "₹750",
-    totalAmount: "₹15 Crores",
-    minInvestment: "₹1 Crore",
-    stage: "Series B",
-    purpose: "Expansion to new cities and R&D",
-    highlights: ["1M+ Users", "500+ Doctors", "85% Satisfaction", "24/7 Service"],
-    employees: "300+",
-    customers: "1M+",
-    featured: true,
-    approved: true,
-    listingType: "premium",
-  },
-  {
-    id: "3",
-    name: "EduTech Learning Platform",
-    logo: "/education-learning-logo.jpg",
-    industry: "EdTech",
-    location: "Bangalore, Karnataka",
-    yearIncorporated: "2021",
-    website: "www.edutechlearning.com",
-    description:
-      "Personalized learning platform using AI to adapt to each student's pace and learning style for K-12 education with gamified content.",
-    lastYearSales: "₹1.2 Crores",
-    currentYearProjection: "₹3.5 Crores",
-    sharesOffered: "80,000",
-    pricePerShare: "₹625",
-    totalAmount: "₹5 Crores",
-    minInvestment: "₹25 Lakhs",
-    stage: "Seed",
-    purpose: "Content development and marketing",
-    highlights: ["50K+ Students", "150% Growth", "Award Winning", "Gamified"],
-    employees: "80+",
-    customers: "50K+",
-    featured: false,
-    approved: true,
-    listingType: "normal",
-  },
-  {
-    id: "4",
-    name: "GreenEnergy Solutions",
-    logo: "/green-energy-solar-logo.jpg",
-    industry: "Renewable Energy",
-    location: "Ahmedabad, Gujarat",
-    yearIncorporated: "2018",
-    website: "www.greenenergysolutions.com",
-    description:
-      "Solar energy solutions provider for residential and commercial properties with innovative financing models and government partnerships.",
-    lastYearSales: "₹12 Crores",
-    currentYearProjection: "₹20 Crores",
-    sharesOffered: "150,000",
-    pricePerShare: "₹800",
-    totalAmount: "₹12 Crores",
-    minInvestment: "₹75 Lakhs",
-    stage: "Series A",
-    purpose: "Manufacturing facility and expansion",
-    highlights: ["2000+ Installations", "Carbon Neutral", "Govt Certified", "ESG Compliant"],
-    employees: "200+",
-    customers: "2000+",
-    featured: true,
-    approved: true,
-    listingType: "premium",
-  },
-  {
-    id: "5",
-    name: "FinTech Payment Gateway",
-    logo: "/fintech-payment-logo.jpg",
-    industry: "FinTech",
-    location: "Mumbai, Maharashtra",
-    yearIncorporated: "2020",
-    website: "www.fintechpayment.com",
-    description:
-      "Next-generation payment gateway with blockchain integration for secure, instant cross-border transactions with multi-currency support.",
-    lastYearSales: "₹6 Crores",
-    currentYearProjection: "₹12 Crores",
-    sharesOffered: "120,000",
-    pricePerShare: "₹1000",
-    totalAmount: "₹12 Crores",
-    minInvestment: "₹1 Crore",
-    stage: "Series A",
-    purpose: "Technology infrastructure and compliance",
-    highlights: ["₹500Cr+ Processed", "99.9% Uptime", "RBI Approved", "Blockchain"],
-    employees: "120+",
-    customers: "5000+",
-    featured: true,
-    approved: true,
-    listingType: "premium",
-  },
-  {
-    id: "6",
-    name: "AgriTech Farming Solutions",
-    logo: "/agriculture-farming-logo.jpg",
-    industry: "AgriTech",
-    location: "Hyderabad, Telangana",
-    yearIncorporated: "2019",
-    website: "www.agritechfarming.com",
-    description:
-      "IoT-based precision farming solutions helping farmers optimize crop yield and reduce water consumption with real-time monitoring.",
-    lastYearSales: "₹3 Crores",
-    currentYearProjection: "₹7 Crores",
-    sharesOffered: "100,000",
-    pricePerShare: "₹400",
-    totalAmount: "₹4 Crores",
-    minInvestment: "₹40 Lakhs",
-    stage: "Seed",
-    purpose: "Product development and farmer onboarding",
-    highlights: ["5000+ Farmers", "30% Yield Increase", "Water Saving", "IoT Enabled"],
-    employees: "60+",
-    customers: "5000+",
-    featured: false,
-    approved: true,
-    listingType: "normal",
-  },
-  {
-    id: "7",
-    name: "E-Commerce Logistics Hub",
-    logo: "/logistics-delivery-logo.jpg",
-    industry: "Logistics",
-    location: "Gurgaon, Haryana",
-    yearIncorporated: "2020",
-    website: "www.ecommercelogistics.com",
-    description:
-      "Last-mile delivery solutions for e-commerce with AI-powered route optimization and same-day delivery capabilities across metro cities.",
-    lastYearSales: "₹10 Crores",
-    currentYearProjection: "₹18 Crores",
-    sharesOffered: "180,000",
-    pricePerShare: "₹555",
-    totalAmount: "₹10 Crores",
-    minInvestment: "₹60 Lakhs",
-    stage: "Series A",
-    purpose: "Fleet expansion and technology upgrade",
-    highlights: ["1M+ Deliveries", "Same Day Delivery", "AI Optimized", "Pan India"],
-    employees: "500+",
-    customers: "100+",
-    featured: false,
-    approved: true,
-    listingType: "normal",
-  },
-  {
-    id: "8",
-    name: "FoodTech Delivery Platform",
-    logo: "/food-delivery-logo.png",
-    industry: "FoodTech",
-    location: "Bangalore, Karnataka",
-    yearIncorporated: "2021",
-    website: "www.foodtechdelivery.com",
-    description:
-      "Cloud kitchen aggregator platform connecting home chefs with customers, promoting authentic regional cuisines with quality assurance.",
-    lastYearSales: "₹4 Crores",
-    currentYearProjection: "₹9 Crores",
-    sharesOffered: "90,000",
-    pricePerShare: "₹666",
-    totalAmount: "₹6 Crores",
-    minInvestment: "₹35 Lakhs",
-    stage: "Seed",
-    purpose: "Chef onboarding and marketing",
-    highlights: ["500+ Chefs", "50K+ Orders", "Regional Cuisine", "Quality Assured"],
-    employees: "100+",
-    customers: "50K+",
-    featured: false,
-    approved: true,
-    listingType: "normal",
-  },
-]
+interface Company {
+  id: string;
+  company_name: string;
+  logo_filename: string;
+  industry: string;
+  registered_address: string;
+  year_of_incorporation: string;
+  website: string;
+  about_company: string;
+  previous_sales: string;
+  future_projections: string;
+  shares_offered: string;
+  price_per_share: string;
+  total_amount: string;
+  purpose_of_fundraising: string;
+  listing_type: "normal" | "premium";
+  status: "pending" | "approved" | "rejected";
+  contact_person: string;
+  email: string;
+  mobile: string;
+  created_at: string;
+}
+
+interface ApiResponse {
+  success: boolean;
+  data?: Company[];
+  error?: string;
+}
 
 export default function CompaniesShowcase() {
-  const [companies] = useState(showcaseCompanies.filter((c) => c.approved))
+  const [companies, setCompanies] = useState<Company[]>([])
+  const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [industryFilter, setIndustryFilter] = useState("all")
-  const [stageFilter, setStageFilter] = useState("all")
-  const [showFeaturedOnly, setShowFeaturedOnly] = useState(false)
+  const [listingTypeFilter, setListingTypeFilter] = useState("all")
 
-  const industries = ["all", ...Array.from(new Set(showcaseCompanies.map((c) => c.industry)))]
-  const stages = ["all", ...Array.from(new Set(showcaseCompanies.map((c) => c.stage)))]
+  // Fetch companies from API
+  const fetchCompanies = async () => {
+    try {
+      setRefreshing(true)
+      const response = await fetch('/api/companies?status=approved')
+      const result: ApiResponse = await response.json()
 
+      if (result.success && result.data) {
+        setCompanies(result.data)
+      } else {
+        console.error('Failed to fetch companies:', result.error)
+      }
+    } catch (error) {
+      console.error('Error fetching companies:', error)
+    } finally {
+      setLoading(false)
+      setRefreshing(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchCompanies()
+  }, [])
+
+  // Get unique industries for filter
+  const industries = ["all", ...Array.from(new Set(companies.map((c) => c.industry)))]
+
+  // Filter companies based on search and filters
   const filteredCompanies = companies.filter((company) => {
     const matchesSearch =
-      company.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      company.description.toLowerCase().includes(searchQuery.toLowerCase())
+      company.company_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      company.about_company.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      company.industry.toLowerCase().includes(searchQuery.toLowerCase())
+    
     const matchesIndustry = industryFilter === "all" || company.industry === industryFilter
-    const matchesStage = stageFilter === "all" || company.stage === stageFilter
-    const matchesFeatured = !showFeaturedOnly || company.featured
-    return matchesSearch && matchesIndustry && matchesStage && matchesFeatured
+    const matchesListingType = listingTypeFilter === "all" || company.listing_type === listingTypeFilter
+    
+    return matchesSearch && matchesIndustry && matchesListingType
   })
 
-  const premiumCompanies = filteredCompanies.filter((c) => c.listingType === "premium")
-  const normalCompanies = filteredCompanies.filter((c) => c.listingType === "normal")
+  const premiumCompanies = filteredCompanies.filter((c) => c.listing_type === "premium")
+  const normalCompanies = filteredCompanies.filter((c) => c.listing_type === "normal")
+
+  // Helper function to generate highlights based on company data
+  const generateHighlights = (company: Company) => {
+    const highlights = []
+    
+    // Add industry-specific highlights
+    if (company.industry.toLowerCase().includes('tech')) {
+      highlights.push('Tech Innovation')
+    }
+    if (company.industry.toLowerCase().includes('health')) {
+      highlights.push('Healthcare Focus')
+    }
+    if (company.industry.toLowerCase().includes('energy')) {
+      highlights.push('Sustainable')
+    }
+    
+    // Add performance highlights based on sales data
+    if (company.previous_sales && company.previous_sales.includes('Cr')) {
+      highlights.push('Strong Revenue')
+    }
+    
+    // Add growth potential
+    if (company.future_projections && company.future_projections.includes('Cr')) {
+      highlights.push('High Growth')
+    }
+    
+    // Add listing type highlight
+    if (company.listing_type === 'premium') {
+      highlights.push('Premium Listing')
+    }
+    
+    // Ensure we have at least 2 highlights
+    if (highlights.length < 2) {
+      highlights.push('Verified', 'Pre-IPO')
+    }
+    
+    return highlights.slice(0, 4) // Max 4 highlights
+  }
+
+  // Helper function to get location from address
+  const getLocation = (address: string) => {
+    const parts = address.split(',')
+    if (parts.length >= 2) {
+      return `${parts[0]}, ${parts[parts.length - 2]}`
+    }
+    return address
+  }
+
+  // Helper function to format financial data
+  const formatFinancialData = (data: string) => {
+    if (!data) return 'Not Available'
+    // Extract numbers and format
+    const match = data.match(/(\d+\.?\d*)\s*(Cr|Lakh|L)/i)
+    if (match) {
+      return `₹${match[1]} ${match[2].toLowerCase().includes('cr') ? 'Crores' : 'Lakhs'}`
+    }
+    return data
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <RefreshCw className="w-12 h-12 text-indigo-600 animate-spin mx-auto mb-4" />
+          <p className="text-slate-600">Loading companies...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-slate-50">
@@ -282,16 +206,32 @@ export default function CompaniesShowcase() {
           </Card>
           <Card className="p-6 text-center border-2 shadow-lg bg-white">
             <TrendingUp className="w-8 h-8 text-purple-600 mx-auto mb-2" />
-            <p className="text-3xl font-bold text-slate-900">₹78Cr+</p>
+            <p className="text-3xl font-bold text-slate-900">
+              ₹{companies.reduce((total, company) => {
+                const amount = company.total_amount ? parseFloat(company.total_amount.replace(/[^0-9.]/g, '')) : 0
+                return total + amount
+              }, 0).toFixed(1)}Cr+
+            </p>
             <p className="text-sm text-slate-600">Total Raising</p>
           </Card>
         </div>
 
         {/* Filters */}
         <Card className="p-6 mb-8 border-2">
-          <div className="flex items-center gap-2 mb-4">
-            <Filter className="w-5 h-5 text-slate-600" />
-            <h2 className="font-semibold text-slate-900">Filter Companies</h2>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Filter className="w-5 h-5 text-slate-600" />
+              <h2 className="font-semibold text-slate-900">Filter Companies</h2>
+            </div>
+            <Button 
+              onClick={fetchCompanies} 
+              variant="outline" 
+              size="sm"
+              disabled={refreshing}
+            >
+              <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -320,17 +260,15 @@ export default function CompaniesShowcase() {
               </SelectContent>
             </Select>
 
-            {/* Stage Filter */}
-            <Select value={stageFilter} onValueChange={setStageFilter}>
+            {/* Listing Type Filter */}
+            <Select value={listingTypeFilter} onValueChange={setListingTypeFilter}>
               <SelectTrigger className="border-2">
-                <SelectValue placeholder="Select Stage" />
+                <SelectValue placeholder="Listing Type" />
               </SelectTrigger>
               <SelectContent>
-                {stages.map((stage) => (
-                  <SelectItem key={stage} value={stage}>
-                    {stage === "all" ? "All Stages" : stage}
-                  </SelectItem>
-                ))}
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="premium">Premium</SelectItem>
+                <SelectItem value="normal">Normal</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -340,25 +278,15 @@ export default function CompaniesShowcase() {
               <p className="text-slate-600">
                 Showing <strong>{filteredCompanies.length}</strong> of <strong>{companies.length}</strong> companies
               </p>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={showFeaturedOnly}
-                  onChange={(e) => setShowFeaturedOnly(e.target.checked)}
-                  className="w-4 h-4 rounded border-2 border-slate-300"
-                />
-                <span className="text-slate-700">Featured only</span>
-              </label>
             </div>
-            {(searchQuery || industryFilter !== "all" || stageFilter !== "all" || showFeaturedOnly) && (
+            {(searchQuery || industryFilter !== "all" || listingTypeFilter !== "all") && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => {
                   setSearchQuery("")
                   setIndustryFilter("all")
-                  setStageFilter("all")
-                  setShowFeaturedOnly(false)
+                  setListingTypeFilter("all")
                 }}
               >
                 Clear Filters
@@ -379,143 +307,12 @@ export default function CompaniesShowcase() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
               {premiumCompanies.map((company) => (
-                <Card key={company.id} className="p-6 border-2 hover:shadow-xl transition-all relative">
-                  {/* Featured Badge */}
-                  {company.featured && (
-                    <div className="absolute top-4 right-4">
-                      <Badge className="bg-gradient-to-r from-amber-400 to-orange-500 text-white border-0">
-                        <Award className="w-3 h-3 mr-1" />
-                        Featured
-                      </Badge>
-                    </div>
-                  )}
-
-                  <div className="flex items-start gap-4 mb-4">
-                    <div className="w-16 h-16 rounded-full border-2 border-indigo-200 overflow-hidden bg-white flex-shrink-0 shadow-md">
-                      <img
-                        src={company.logo || "/placeholder.svg"}
-                        alt={`${company.name} logo`}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-
-                    {/* Header */}
-                    <div className="flex-1 pr-16">
-                      <h3 className="text-xl font-bold text-slate-900 mb-2">{company.name}</h3>
-                      <div className="flex flex-wrap gap-2">
-                        <Badge className="bg-indigo-100 text-indigo-700 border-indigo-300 border-2">
-                          {company.industry}
-                        </Badge>
-                        <Badge className="bg-emerald-100 text-emerald-700 border-emerald-300 border-2">
-                          {company.stage}
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Description */}
-                  <p className="text-sm text-slate-600 mb-4 leading-relaxed">{company.description}</p>
-
-                  {/* Highlights */}
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {company.highlights.map((highlight, idx) => (
-                      <Badge key={idx} variant="secondary" className="border-2">
-                        {highlight}
-                      </Badge>
-                    ))}
-                  </div>
-
-                  {/* Company Stats */}
-                  <div className="grid grid-cols-3 gap-3 mb-4 bg-slate-50 p-4 rounded-lg border-2 border-slate-200">
-                    <div className="text-center">
-                      <Users className="w-4 h-4 text-slate-600 mx-auto mb-1" />
-                      <p className="text-xs text-slate-600 mb-1">Employees</p>
-                      <p className="text-sm font-bold text-slate-900">{company.employees}</p>
-                    </div>
-                    <div className="text-center">
-                      <Target className="w-4 h-4 text-slate-600 mx-auto mb-1" />
-                      <p className="text-xs text-slate-600 mb-1">Customers</p>
-                      <p className="text-sm font-bold text-slate-900">{company.customers}</p>
-                    </div>
-                    <div className="text-center">
-                      <Calendar className="w-4 h-4 text-slate-600 mx-auto mb-1" />
-                      <p className="text-xs text-slate-600 mb-1">Founded</p>
-                      <p className="text-sm font-bold text-slate-900">{company.yearIncorporated}</p>
-                    </div>
-                  </div>
-
-                  {/* Location & Performance */}
-                  <div className="grid grid-cols-2 gap-3 mb-4 bg-slate-50 p-4 rounded-lg border-2 border-slate-200">
-                    <div>
-                      <p className="text-xs text-slate-600 mb-1 flex items-center gap-1">
-                        <MapPin className="w-3 h-3" />
-                        Location
-                      </p>
-                      <p className="text-sm font-medium text-slate-900">{company.location.split(",")[0]}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-slate-600 mb-1 flex items-center gap-1">
-                        <TrendingUp className="w-3 h-3" />
-                        Last Year Sales
-                      </p>
-                      <p className="text-sm font-medium text-slate-900">{company.lastYearSales}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-slate-600 mb-1">Current Year Projection</p>
-                      <p className="text-sm font-medium text-slate-900">{company.currentYearProjection}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-slate-600 mb-1">Website</p>
-                      <a
-                        href={`https://${company.website}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm font-medium text-indigo-600 hover:underline flex items-center gap-1"
-                      >
-                        Visit <ExternalLink className="w-3 h-3" />
-                      </a>
-                    </div>
-                  </div>
-
-                  {/* Funding Details */}
-                  <div className="bg-gradient-to-br from-indigo-50 to-purple-50 p-4 rounded-lg mb-4 border-2 border-indigo-200">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <p className="text-xs text-slate-600 mb-1">Total Raising</p>
-                        <p className="text-xl font-bold text-slate-900">{company.totalAmount}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-slate-600 mb-1">Min. Investment</p>
-                        <p className="text-xl font-bold text-slate-900">{company.minInvestment}</p>
-                      </div>
-                      <div className="col-span-2">
-                        <p className="text-xs text-slate-600 mb-1">Share Details</p>
-                        <p className="text-sm font-medium text-slate-900">
-                          {company.pricePerShare} × {company.sharesOffered} shares
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Purpose */}
-                  <div className="mb-4 p-3 bg-slate-50 rounded-lg border-2 border-slate-200">
-                    <p className="text-xs text-slate-600 mb-1">Use of Funds</p>
-                    <p className="text-sm text-slate-700">{company.purpose}</p>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex gap-3">
-                    <Button className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700">
-                      View Details
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                    <Button variant="outline" className="border-2 bg-transparent" asChild>
-                      <a href={`https://${company.website}`} target="_blank" rel="noopener noreferrer">
-                        <ExternalLink className="w-4 h-4" />
-                      </a>
-                    </Button>
-                  </div>
-                </Card>
+                <CompanyCard 
+                  key={company.id} 
+                  company={company} 
+                  highlights={generateHighlights(company)}
+                  location={getLocation(company.registered_address)}
+                />
               ))}
             </div>
           </div>
@@ -539,125 +336,12 @@ export default function CompaniesShowcase() {
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {normalCompanies.map((company) => (
-                  <Card key={company.id} className="p-6 border-2 hover:shadow-xl transition-all relative">
-                    <div className="flex items-start gap-4 mb-4">
-                      <div className="w-16 h-16 rounded-full border-2 border-indigo-200 overflow-hidden bg-white flex-shrink-0 shadow-md">
-                        <img
-                          src={company.logo || "/placeholder.svg"}
-                          alt={`${company.name} logo`}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-
-                      <div className="flex-1">
-                        <h3 className="text-xl font-bold text-slate-900 mb-2">{company.name}</h3>
-                        <div className="flex flex-wrap gap-2">
-                          <Badge className="bg-indigo-100 text-indigo-700 border-indigo-300 border-2">
-                            {company.industry}
-                          </Badge>
-                          <Badge className="bg-emerald-100 text-emerald-700 border-emerald-300 border-2">
-                            {company.stage}
-                          </Badge>
-                        </div>
-                      </div>
-                    </div>
-
-                    <p className="text-sm text-slate-600 mb-4 leading-relaxed">{company.description}</p>
-
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {company.highlights.map((highlight, idx) => (
-                        <Badge key={idx} variant="secondary" className="border-2">
-                          {highlight}
-                        </Badge>
-                      ))}
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-3 mb-4 bg-slate-50 p-4 rounded-lg border-2 border-slate-200">
-                      <div className="text-center">
-                        <Users className="w-4 h-4 text-slate-600 mx-auto mb-1" />
-                        <p className="text-xs text-slate-600 mb-1">Employees</p>
-                        <p className="text-sm font-bold text-slate-900">{company.employees}</p>
-                      </div>
-                      <div className="text-center">
-                        <Target className="w-4 h-4 text-slate-600 mx-auto mb-1" />
-                        <p className="text-xs text-slate-600 mb-1">Customers</p>
-                        <p className="text-sm font-bold text-slate-900">{company.customers}</p>
-                      </div>
-                      <div className="text-center">
-                        <Calendar className="w-4 h-4 text-slate-600 mx-auto mb-1" />
-                        <p className="text-xs text-slate-600 mb-1">Founded</p>
-                        <p className="text-sm font-bold text-slate-900">{company.yearIncorporated}</p>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3 mb-4 bg-slate-50 p-4 rounded-lg border-2 border-slate-200">
-                      <div>
-                        <p className="text-xs text-slate-600 mb-1 flex items-center gap-1">
-                          <MapPin className="w-3 h-3" />
-                          Location
-                        </p>
-                        <p className="text-sm font-medium text-slate-900">{company.location.split(",")[0]}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-slate-600 mb-1 flex items-center gap-1">
-                          <TrendingUp className="w-3 h-3" />
-                          Last Year Sales
-                        </p>
-                        <p className="text-sm font-medium text-slate-900">{company.lastYearSales}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-slate-600 mb-1">Current Year Projection</p>
-                        <p className="text-sm font-medium text-slate-900">{company.currentYearProjection}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-slate-600 mb-1">Website</p>
-                        <a
-                          href={`https://${company.website}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm font-medium text-indigo-600 hover:underline flex items-center gap-1"
-                        >
-                          Visit <ExternalLink className="w-3 h-3" />
-                        </a>
-                      </div>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-indigo-50 to-purple-50 p-4 rounded-lg mb-4 border-2 border-indigo-200">
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <p className="text-xs text-slate-600 mb-1">Total Raising</p>
-                          <p className="text-xl font-bold text-slate-900">{company.totalAmount}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-slate-600 mb-1">Min. Investment</p>
-                          <p className="text-xl font-bold text-slate-900">{company.minInvestment}</p>
-                        </div>
-                        <div className="col-span-2">
-                          <p className="text-xs text-slate-600 mb-1">Share Details</p>
-                          <p className="text-sm font-medium text-slate-900">
-                            {company.pricePerShare} × {company.sharesOffered} shares
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mb-4 p-3 bg-slate-50 rounded-lg border-2 border-slate-200">
-                      <p className="text-xs text-slate-600 mb-1">Use of Funds</p>
-                      <p className="text-sm text-slate-700">{company.purpose}</p>
-                    </div>
-
-                    <div className="flex gap-3">
-                      <Button className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700">
-                        View Details
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </Button>
-                      <Button variant="outline" className="border-2 bg-transparent" asChild>
-                        <a href={`https://${company.website}`} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="w-4 h-4" />
-                        </a>
-                      </Button>
-                    </div>
-                  </Card>
+                  <CompanyCard 
+                    key={company.id} 
+                    company={company} 
+                    highlights={generateHighlights(company)}
+                    location={getLocation(company.registered_address)}
+                  />
                 ))}
               </div>
             )}
@@ -687,4 +371,173 @@ export default function CompaniesShowcase() {
       </div>
     </div>
   )
+}
+
+// Separate Company Card Component for better organization
+interface CompanyCardProps {
+  company: Company
+  highlights: string[]
+  location: string
+}
+
+function CompanyCard({ company, highlights, location }: CompanyCardProps) {
+  return (
+    <Card className="p-6 border-2 hover:shadow-xl transition-all relative">
+      {/* Featured Badge for Premium Listings */}
+      {company.listing_type === "premium" && (
+        <div className="absolute top-4 right-4">
+          <Badge className="bg-gradient-to-r from-amber-400 to-orange-500 text-white border-0">
+            <Award className="w-3 h-3 mr-1" />
+            Featured
+          </Badge>
+        </div>
+      )}
+
+      <div className="flex items-start gap-4 mb-4">
+        <div className="w-16 h-16 rounded-full border-2 border-indigo-200 overflow-hidden bg-white flex-shrink-0 shadow-md flex items-center justify-center">
+          {company.logo_filename ? (
+            <img
+              src={`/uploads/${company.logo_filename}`}
+              alt={`${company.company_name} logo`}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <Building2 className="w-8 h-8 text-indigo-400" />
+          )}
+        </div>
+
+        {/* Header */}
+        <div className="flex-1 pr-16">
+          <h3 className="text-xl font-bold text-slate-900 mb-2">{company.company_name}</h3>
+          <div className="flex flex-wrap gap-2">
+            <Badge className="bg-indigo-100 text-indigo-700 border-indigo-300 border-2">
+              {company.industry}
+            </Badge>
+            <Badge className="bg-emerald-100 text-emerald-700 border-emerald-300 border-2">
+              {company.listing_type === 'premium' ? 'Premium' : 'Standard'}
+            </Badge>
+          </div>
+        </div>
+      </div>
+
+      {/* Description */}
+      <p className="text-sm text-slate-600 mb-4 leading-relaxed">{company.about_company}</p>
+
+      {/* Highlights */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        {highlights.map((highlight, idx) => (
+          <Badge key={idx} variant="secondary" className="border-2">
+            {highlight}
+          </Badge>
+        ))}
+      </div>
+
+      {/* Company Stats */}
+      <div className="grid grid-cols-3 gap-3 mb-4 bg-slate-50 p-4 rounded-lg border-2 border-slate-200">
+        <div className="text-center">
+          <Users className="w-4 h-4 text-slate-600 mx-auto mb-1" />
+          <p className="text-xs text-slate-600 mb-1">Founded</p>
+          <p className="text-sm font-bold text-slate-900">{company.year_of_incorporation}</p>
+        </div>
+        <div className="text-center">
+          <Target className="w-4 h-4 text-slate-600 mx-auto mb-1" />
+          <p className="text-xs text-slate-600 mb-1">Contact</p>
+          <p className="text-sm font-bold text-slate-900">{company.contact_person.split(' ')[0]}</p>
+        </div>
+        <div className="text-center">
+          <Calendar className="w-4 h-4 text-slate-600 mx-auto mb-1" />
+          <p className="text-xs text-slate-600 mb-1">Status</p>
+          <p className="text-sm font-bold text-slate-900">Approved</p>
+        </div>
+      </div>
+
+      {/* Location & Performance */}
+      <div className="grid grid-cols-2 gap-3 mb-4 bg-slate-50 p-4 rounded-lg border-2 border-slate-200">
+        <div>
+          <p className="text-xs text-slate-600 mb-1 flex items-center gap-1">
+            <MapPin className="w-3 h-3" />
+            Location
+          </p>
+          <p className="text-sm font-medium text-slate-900">{location}</p>
+        </div>
+        <div>
+          <p className="text-xs text-slate-600 mb-1 flex items-center gap-1">
+            <TrendingUp className="w-3 h-3" />
+            Previous Sales
+          </p>
+          <p className="text-sm font-medium text-slate-900">
+            {formatFinancialData(company.previous_sales)}
+          </p>
+        </div>
+        <div>
+          <p className="text-xs text-slate-600 mb-1">Future Projections</p>
+          <p className="text-sm font-medium text-slate-900">
+            {formatFinancialData(company.future_projections)}
+          </p>
+        </div>
+        <div>
+          <p className="text-xs text-slate-600 mb-1">Contact</p>
+          <p className="text-sm font-medium text-indigo-600">
+            {company.email}
+          </p>
+        </div>
+      </div>
+
+      {/* Funding Details */}
+      <div className="bg-gradient-to-br from-indigo-50 to-purple-50 p-4 rounded-lg mb-4 border-2 border-indigo-200">
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <p className="text-xs text-slate-600 mb-1">Total Raising</p>
+            <p className="text-xl font-bold text-slate-900">
+              {formatFinancialData(company.total_amount)}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-slate-600 mb-1">Price per Share</p>
+            <p className="text-xl font-bold text-slate-900">
+              {company.price_per_share}
+            </p>
+          </div>
+          <div className="col-span-2">
+            <p className="text-xs text-slate-600 mb-1">Share Details</p>
+            <p className="text-sm font-medium text-slate-900">
+              {company.price_per_share} × {company.shares_offered} shares
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Purpose */}
+      <div className="mb-4 p-3 bg-slate-50 rounded-lg border-2 border-slate-200">
+        <p className="text-xs text-slate-600 mb-1">Use of Funds</p>
+        <p className="text-sm text-slate-700">{company.purpose_of_fundraising}</p>
+      </div>
+
+      {/* Actions */}
+      <div className="flex gap-3">
+        <Button className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700">
+          View Details
+          <ArrowRight className="w-4 h-4 ml-2" />
+        </Button>
+        {company.website && (
+          <Button variant="outline" className="border-2 bg-transparent" asChild>
+            <a href={`https://${company.website}`} target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="w-4 h-4" />
+            </a>
+          </Button>
+        )}
+      </div>
+    </Card>
+  )
+}
+
+// Helper function to format financial data
+function formatFinancialData(data: string) {
+  if (!data) return 'Not Available'
+  // Extract numbers and format
+  const match = data.match(/(\d+\.?\d*)\s*(Cr|Lakh|L)/i)
+  if (match) {
+    return `₹${match[1]} ${match[2].toLowerCase().includes('cr') ? 'Crores' : 'Lakhs'}`
+  }
+  return data
 }
