@@ -10,16 +10,14 @@ function getPool(): Pool {
   if (global.__UNLISTX_MYSQL_POOL__) return global.__UNLISTX_MYSQL_POOL__;
 
   const pool = mysql.createPool({
-    host: process.env.DB_HOST,
-    port: Number(process.env.DB_PORT || 3306),
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
+    host: process.env.MYSQL_HOST,
+    port: process.env.MYSQL_PORT? Number(process.env.MYSQL_PORT) : 3306,
+    user: process.env.MYSQL_USER,
+    password: process.env.MYSQL_PASSWORD,
+    database: process.env.MYSQL_DATABASE,
     waitForConnections: true,
-    connectionLimit: Number(process.env.DB_CONNECTION_LIMIT || 5),
-    queueLimit: 0,
-    // optionally add ssl in production if required by provider
-    // ssl: { rejectUnauthorized: true }
+    connectionLimit: 10,
+    queueLimit: 0
   });
 
   global.__UNLISTX_MYSQL_POOL__ = pool;
