@@ -54,7 +54,7 @@ export function HeroSection() {
               {/* <Link href="/secondary-market">
                 <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-5 py-2.5 hover:bg-white/20 transition-colors cursor-pointer">
                   <TrendingUp className="h-4 w-4 text-white" />
-                  <span className="text-white font-semibold text-sm">Secondary Market</span>
+                  <span className="text-white font-semibold text-sm">Secondar Market</span>
                 </div>
               </Link> */}
             </div>
